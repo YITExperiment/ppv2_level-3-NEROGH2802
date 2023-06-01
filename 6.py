@@ -1,66 +1,114 @@
-import turtle as t
-def rectangle(horizontal,vertical,color):
-    t.pendown()
-    t.pensize(1)
-    t.color(color)
-    t.begin_fill()
-    for counter in range (1,3):
-      t.forward(horizontal)
-      t.right(90)
-      t.forward(vertical)
-      t.right(90)
-    t.end_fill()
-    t.penup()
+from tkinter import Tk , HIDDEN , NORMAL , Canvas
 
-t.penup()
-t.speed('slow')
-t.bgcolor('dodger blue')
+def toggle_eyes():
+    current_color = c.itemcget(eye_left,'fill')
+    new_color = c.body_color if current_color == 'white' else 'white'
+    current_state = c.itemcget(pupil_left , 'state')
+    new_state = NORMAL if current_state == HIDDEN else HIDDEN
+    c.itemconfigure(pupil_left , state = new_state)
+    c.itemconfigure(pupil_right , state = new_state)
+    c.itemconfigure(eye_left , fill = new_color)
+    c.itemconfigure(eye_right , fill = new_color)
 
-#feet
-t.goto(-100,-150)
-rectangle(50,20,'blue')
-t.goto(-30,-150)
-rectangle(50,20,'blue')
+def blink():
+    toggle_eyes()
+    win.after(250,toggle_eyes)
+    win.after(3000,blink)
 
-#legs
-t.goto(-25,-50)
-rectangle(15,100,'grey')
-t.goto(-55,-50)
-rectangle(-15,100,'grey')
+def toggle_pupils():
+    if not c.crossed_eyes:
+        c.move(pupil_left , 10,-5)
+        c.move(pupil_right , -10,-5)
+        c.crossed_eyes = True
+    else:
+        c.move(pupil_left , -10,5)
+        c.move(pupil_right , 10,5)
+        c.crossed_eyes = False
 
-#body
-t.goto(-90,100)
-rectangle(100,150,'red')
+def toggle_tongue():
+    if not c.tonque_out:
+        c.itemconfigure(tongue_tip , state = NORMAL)
+        c.itemconfigure(tongue_main , state = NORMAL)
+        c.tonque_out = True
+    else:
+        c.itemconfigure(tongue_tip , state = HIDDEN)
+        c.itemconfigure(tongue_main , state = HIDDEN)
+        c.tonque_out = False
 
-#arms
-t.goto(-150,70)
-rectangle(60,15,'grey')
-t.goto(-150,110)
-rectangle(15,40,'grey')
+def cheeky(event):
+    toggle_tongue()
+    toggle_pupils()
+    hide_happy(event)
+    win.after(1000,toggle_tongue)
+    win.after(1000,toggle_pupils)
+    return
 
-t.goto(10,70)
-rectangle(60,15,'grey')
-t.goto(55,110),
-rectangle(15,40,'grey')
+def show_happy(event):
+    if(20<= event.x and event.x <= 350) and (20<= event.y and event.y <= 350):
+        c.itemconfigure(cheek_left , state = NORMAL)
+        c.itemconfigure(cheek_right , state = NORMAL)
+        c.itemconfigure(mouth_happy , state = NORMAL)
+        c.itemconfigure(mouth_normal , state = HIDDEN)
+        c.itemconfigure(mouth_sad, state = HIDDEN)
+        c.happy_level = 10
+    return
 
-#neck
-t.goto(-50,120)
-rectangle(15,20,'grey')
+def hide_happy(event):
+    c.itemconfigure(cheek_left , state = HIDDEN)
+    c.itemconfigure(cheek_right , state = HIDDEN)
+    c.itemconfigure(mouth_happy , state = HIDDEN)
+    c.itemconfigure(mouth_normal , state = NORMAL)
+    c.itemconfigure(mouth_sad, state = HIDDEN)
+    return
 
-#head
-t.goto(-85,170)
-rectangle(80,50,'red')
+def sad():
+    if c.happy_level == 0 :
+        c.itemconfigure(mouth_happy , state = HIDDEN)
+        c.itemconfigure(mouth_normal , state = HIDDEN)
+        c.itemconfigure(mouth_sad , state = NORMAL)
+    else:
+        c.happy_level -= 1
+    win.after(500,sad)
 
-#eyes
-t.goto(-60,160)
-rectangle(30,10,'white')
-t.goto(-55,155)
-rectangle(5,5,'black')
-t.goto(-40,155)
-rectangle(5,5,'black')
+win = Tk()
 
-#mouth
-t.goto(-65,135)
-rectangle(40,5,'black')
+c = Canvas(win , width=400 , height=400)
+c.configure(bg='dark blue' , highlightthickness=0)
 
-t.hideturtle()
+c.body_color = 'SkyBlue1'
+
+body = c.create_oval(35,20,365,350,outline=c.body_color , fill=c.body_color)
+foot_left = c.create_oval(65,320,145,360 , outline=c.body_color , fill=c.body_color)
+foot_right = c.create_oval(250,320,330,360 , outline=c.body_color , fill=c.body_color)
+
+ear_left = c.create_polygon(75,80,75,10,165,70,outline=c.body_color , fill=c.body_color)
+ear_right = c.create_polygon(255,45,325,10,320,70,outline=c.body_color , fill=c.body_color)
+
+eye_left = c.create_oval(130,110,160,170,outline='black' , fill='white')
+pupil_left = c.create_oval(140,145,150,155,outline='black' , fill='black')
+eye_right = c.create_oval(230,110,260,170,outline='black' , fill='white')
+pupil_right = c.create_oval(240,145,250,155,outline='black' , fill='black')
+
+mouth_normal = c.create_line(170,250,200,272,230,250,smooth=1 , width=2 , state=NORMAL)
+mouth_happy = c.create_line(170,250,200,282,230,250,smooth=1 , width=2 , state=HIDDEN)
+mouth_sad = c.create_line(170,250,200,232,230,250,smooth=1 , width=2 , state=HIDDEN)
+
+tongue_main = c.create_rectangle(170,250,230,290,outline='red' , fill='red',state=HIDDEN)
+tongue_tip = c.create_oval(170,285,230,300,outline='red' , fill='red',state=HIDDEN)
+
+cheek_left = c.create_oval(70,180,120,230,outline='pink' , fill='pink',state=HIDDEN)
+cheek_right = c.create_oval(280,180,330,230,outline='pink' , fill='pink',state=HIDDEN)
+
+c.pack()
+
+c.bind('<Motion>' , show_happy)
+c.bind('<Leave>' , hide_happy)
+c.bind('<Double-1>' , cheeky)
+
+c.crossed_eyes = False
+c.tonque_out = False
+c.happy_level = 10
+
+win.after(1000,blink)
+win.after(5000,sad)
+win.mainloop()
